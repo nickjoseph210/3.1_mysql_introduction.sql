@@ -144,3 +144,51 @@ WHERE salaries.to_date > CURDATE()
 AND dept_manager.to_date > now()
 ORDER BY salary DESC
 LIMIT 1;
+
+#11 BONUS - find the hightest paid employee in 
+# each department;
+#MAGGIE'S ANSWER 
+USE employees;
+
+SELECT s.emp_no, max_s.max_salary, max_s.dept_no, dept.dept_name, emp.first_name, emp.last_name
+FROM salaries s
+JOIN(
+	SELECT MAX(sal.salary) AS max_salary, sal.dept_no
+	FROM (
+		SELECT de.emp_no, de.dept_no, s.salary # aliases dept_name
+		FROM dept_emp de
+		JOIN salaries s ON de.emp_no = s.emp_no
+# joins salaries at emp_no's in s and de
+		WHERE de.to_date > now()# they're still in that dept
+		AND s.to_date > now() # they're still getting paid 
+		) sal
+	GROUP BY sal.dept_no) max_s;
+	ON s.salary = max_s.max_salary
+JOIN employees emp ON salaries.emp_no = emp.emp_no
+JOIN departments dept ON max_salary.dept_no = dept.dept_no
+WHERE s.to_date > now();
+#Entire thing after JOIN is joining a whole set of
+#subqueries and aliasing them as 'mx_sal'
+
+#ALLEN'S ANSWER
+SELECT
+	CONCAT(e1.first_name, " ", e1.last_name) AS "Employee_Name",
+	dept_name,
+	a.salary
+FROM(
+SELECT
+	de.dept_no,
+	d.dept_name,
+	MAX(salary) AS 'salary'
+FROM dept_emp AS de
+JOIN salaries AS s
+ON de.emp_no = s.emp_no
+JOIN departments AS d
+ON d.dept_no = de.dept_no
+WHERE s.to_date = '9999-01-01'
+GROUP BY dept_no) AS a
+JOIN salaries AS s1
+ON s1.salary = a.salary
+JOIN employees AS e1
+ON e1.emp_no = s1.emp_no
+WHERE s1.to_date = '9999-01-01'
